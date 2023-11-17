@@ -130,6 +130,7 @@ class JoinKeyColumn(Column):
     def __init__(self, name='', keycols=None, **kwargs):
         super().__init__(name, type=keycols[0].type, width=keycols[0].width, **kwargs)
         self.keycols = keycols
+        self.inconsistent_keys = False
 
     def calcValue(self, row):
         vals = set()
@@ -138,6 +139,7 @@ class JoinKeyColumn(Column):
                 vals.add(c.getTypedValue(row[c.sheet]))
         if len(vals) != 1:
             vd.debug(f'inconsistent keys: ' + str(vals))
+            self.inconsistent_keys = True
         return vals.pop()
 
     def putValue(self, row, value):
@@ -240,6 +242,13 @@ class JoinSheet(Sheet):
                     for combinedRow in combinedRows:
                         if not all(r is not None for r in combinedRow.values()):
                             self.addRow(combinedRow)
+
+@JoinSheet.api
+def hint_type_join_keycol(self):
+    for col in self.columns:
+        if isinstance(col, JoinKeyColumn) and col.inconsistent_keys:
+            return 5, f"[:hint] The source key columns for [:code]{col.name}[/], have different types. Type the source columns with [:code]<SPACE> hint-[/] before joining. [/]"
+
 
 
 ## for ExtendedSheet_reload below

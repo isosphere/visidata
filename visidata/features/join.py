@@ -137,7 +137,7 @@ class JoinKeyColumn(Column):
             if row[c.sheet] is not None:
                 vals.add(c.getTypedValue(row[c.sheet]))
         if len(vals) != 1:
-            vd.warning(f'inconsistent keys: ' + str(vals))
+            vd.debug(f'inconsistent keys: ' + str(vals))
         return vals.pop()
 
     def putValue(self, row, value):
